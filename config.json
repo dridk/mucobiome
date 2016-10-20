@@ -1,0 +1,9 @@
+
+{
+
+"primer_forward" : "CCTACGGGAGGCAGCAG",
+"primer_reverse" : "CCGTCAATTCMTTTRAGT",
+"greengene" : "database/gg_13_5_with_header.fasta",
+"sample_data" : "mapping.txt"
+
+}

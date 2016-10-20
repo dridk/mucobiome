@@ -1,110 +1,120 @@
 import glob 
 import re 
-# merge all fasta file into 1 
-rule combine_all:
-	input:  [m.group(0)+".fasta" for m in (re.search("\d+",l) for l in glob.glob("raw/*.fastq.gz")) if m is not None]
+
+rule merge_all :
+	input: 
+		[m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("raw/*.fastq.gz")) if m is not None]
 
 	output:
-		"all.merge.fasta" 
+		"all.merge.fasta"
 	shell:
 		"cat {input} > {output}"
 
-
-
-# Execute Flash to merge pair end 
-rule merge:
-	input:
-		forward="raw/{sample}_1.fastq.gz",
-		reverse="raw/{sample}_2.fastq.gz"
-	output:
-		"{sample}.extendedFrags.fastq.gz"
-	shell:
-		"flash {input.forward} {input.reverse} -z -o {wildcards.sample}"
-
-
-# Clean sequences 
-rule clean_seq:
-	input:
-		"{sample}.extendedFrags.fastq.gz"
-	output:
-		"{sample}.clean.fastq.gz"
-	shell:
-		"sickle se -f {input} -t sanger -o {output} -g -q 35"
-
-
-# Convert fastq to fasta and use sample name as fasta header 
-rule to_fasta:
-	input:
-		"{sample}.clean.fastq.gz"
-	output:
-		"{sample}.fasta" 
-	shell:
-		"seqtk rename {input} '{wildcards.sample}_'|seqtk seq -A > {output}"
-
-# Clusting fasta file using vsearch 
-rule clustering:
+rule remove_chimer : 
 	input:
 		"all.merge.fasta"
 	output:
-		cluster= "cluster.uc",
-		centroid= "centroid.fasta"	
-	
-	threads : 64 
-	
+		"all.unchimera.fasta"
 	shell:
-		"vsearch -threads {threads} --cluster_fast {input} --id 0.97 --centroids {output.centroid} --uc {output.cluster} --relabel_keep --relabel_sha1 --sizeout" 
-
-
-#rule create_otu:
-#	input:
-#		"centroid.fasta"
-#	output:
-#		"otu.txt" 
-#	shell:
-#		"cat centroid.fasta|grep -oE '>.+\s'|sed 's/>//g'|awk -f genotu.awk > {output}"
+		"vsearch --uchime_denovo {input} --nonchimeras {output}"
 
 
 
-rule create_biom:
+rule assign_taxonomy : 
 	input:
-		cluster="cluster.uc",
-		centroid="centroid.fasta"
+		reads = "all.merge.fasta",
+		greengene = "greengene.trim.fasta"
 	output:
-		"raw.biom"
+		biom = "raw.biom",
+		otu  = "otu.txt"
 	shell:
-		"biom from-uc -i {input.cluster} -o {output} --rep-set-fp {input.centroid}"
+		"vsearch --usearch_global {input.reads} --db {input.greengene} --id 0.90 --sizein --threads 40 --biomout {output.biom} --otutabout {output.otu}"
 
 
 rule add_metadata:
 	input:
-		row = "map.txt",
-		col = "otu.txt",
-		raw = "raw.biom"
+		biom="raw.biom",
+		col="greengene.taxonomy.txt"
 	output:
-		"final.biom" 
+		"final.biom"
 	shell:
-		"biom add-metadata -i {input.raw} --observation-metadata-fp {input.col} -m {input.row} -o {output} --sc-separated taxonomy"
+		"biom add-metadata -i {input.biom} --observation-metadata-fp {input.col} -m mapping.txt -o {output} --sc-separated taxonomy"
 
 
-
-rule assign_taxonomy:
-	input :
-		 "centroid.fasta"
+rule create_taxonomy_for_biom:
+	input:
+		"greengene.trim.fasta"
 	output:
-		"classified.txt"
-
+		"greengene.taxonomy.txt"
 	shell:
-		"java -Xmx10g -jar /PROGS/EXTERN/RDPTools/classifier.jar  classify -c 0.5 -o {output} -h soil.txt  centroid.fasta"
+		"echo -e '#OTU_ID\ttaxonomy'>{output};"
+		"cat {input}|grep '>'|sed 's/>//g'|cut -f1,4 >>{output}"
 
-rule parse_classifed:
-	input :
-		"classified.txt"
+
+
+
+
+rule merge :
+	input:
+		forward = "raw/{sample}_1.fastq.gz",	
+		reverse = "raw/{sample}_2.fastq.gz"
 	output:
-		"otu.txt"
+		"{sample}.merged.fastq"
+	log:
+		"{sample}.merged.log"
+	shell: 
+		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output} > {log}"
+
+
+
+
+
+rule clean : 
+	input:
+		"{sample}.merged.fastq"
+	output:
+		"{sample}.clean.fastq"
 	shell:
-		"cat classified.txt|awk 'BEGIN{{OFS=\"\t\";print(\"#OTUSID\",\"taxonomy\")}} {{print($1,$3\";k__\"$6\";p__\"$9\";c__\"$12\";o__\"$15\";f__\"$18)}}' > {output}"
+		"sickle se -q 30 -l 500  -f {input} -t sanger -o {output}"
+
+
+rule reverse:
+	input:
+		"{sample}.clean.fastq"
+	output:
+		"{sample}.fasta"
+	shell:
+		"seqtk seq -A -r {input} > {output}"
 
 
 
-	
+rule trim_primers:
+	input:
+		"{sample}.fasta"
+	output:
+		"{sample}.trim.fasta"
+	log:
+		forward = "{sample}.cutadapt_forward",
+		reverse = "{sample}.cutadapt_reverse"
+		
+	shell:
+		"cutadapt --discard-untrimmed -g {config[primer_forward]} {input} 2> {log.forward}|"
+		"cutadapt --discard-untrimmed -a $(echo {config[primer_reverse]}|rev|tr ATGCRM TACGYK) - 2> {log.reverse} > {output}"
 
+
+
+rule dereplicate : 
+	input:
+		"{sample}.trim.fasta"
+	output:
+		"{sample}.dereplicate.fasta"
+	shell:
+		"vsearch --derep_fulllength {input} --output {output} --sizeout --relabel_keep"
+
+rule rename:
+	input:
+		"{sample}.dereplicate.fasta"
+	output:
+		"{sample}.rename.fasta"
+	shell:
+		"cat {input}|sed -e 's/>.*/&sample={wildcards.sample};/g' > {output}"
