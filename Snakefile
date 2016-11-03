@@ -16,19 +16,22 @@ rule remove_chimer :
 	output:
 		"all.unchimera.fasta"
 	shell:
-		"vsearch --uchime_denovo {input} --nonchimeras {output}"
+		"vsearch --uchime_denovo {input} --nonchimeras {output} --threads 45"
 
 
 
 rule assign_taxonomy : 
 	input:
-		reads = "all.merge.fasta",
+		reads = "all.unchimera.fasta",
 		greengene = "greengene.trim.fasta"
 	output:
 		biom = "raw.biom",
 		otu  = "otu.txt"
+
+	log:
+		"assign_taxonomy.log"
 	shell:
-		"vsearch --usearch_global {input.reads} --db {input.greengene} --id 0.90 --sizein --threads 40 --biomout {output.biom} --otutabout {output.otu}"
+		"vsearch --usearch_global {input.reads} --db {input.greengene} --id {config[threshold]} --sizein --threads 45 --biomout {output.biom} --otutabout {output.otu} 2> {log}"
 
 
 rule add_metadata:
@@ -63,7 +66,7 @@ rule merge :
 	log:
 		"{sample}.merged.log"
 	shell: 
-		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output} > {log}"
+		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output} 2> {log}"
 
 
 
