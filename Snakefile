@@ -63,7 +63,7 @@ rule merge :
 	log:
 		"{sample}.merged.log"
 	shell: 
-		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output} > {log}"
+		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output} 2> {log}"
 
 
 
@@ -74,8 +74,10 @@ rule clean :
 		"{sample}.merged.fastq"
 	output:
 		"{sample}.clean.fastq"
+	log:
+		"{sample}.clean.log"
 	shell:
-		"sickle se -q 30 -l 500  -f {input} -t sanger -o {output}"
+		"sickle se -q 30 -l 500  -f {input} -t sanger -o {output}  > {log}"
 
 
 rule reverse:
@@ -108,8 +110,11 @@ rule dereplicate :
 		"{sample}.trim.fasta"
 	output:
 		"{sample}.dereplicate.fasta"
+	log:
+		"{sample}.dereplicate.log"
+
 	shell:
-		"vsearch --derep_fulllength {input} --output {output} --sizeout --relabel_keep"
+		"vsearch --derep_fulllength {input} --output {output} --sizeout --relabel_keep 2> {log}"
 
 rule rename:
 	input:
