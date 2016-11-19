@@ -3,7 +3,7 @@
 
 "primer_forward" : "CCTACGGGAGGCAGCAG",
 "primer_reverse" : "CCGTCAATTCMTTTRAGT",
-"greengene" : "database/gg_13_5_with_header.fasta",
+"reference" : "refv3v5.fa",
 "sample_data" : "mapping.txt"
 
 }

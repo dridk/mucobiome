@@ -3,7 +3,7 @@ import re
 
 rule merge_all :
 	input: 
-		[m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("raw/*.fastq.gz")) if m is not None]
+		set([m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("raw/*.fastq.gz")) if m is not None])
 
 	output:
 		"all.merge.fasta"
@@ -15,41 +15,21 @@ rule remove_chimer :
 		"all.merge.fasta"
 	output:
 		"all.unchimera.fasta"
+	log:
+		"all.unchimera.log"
 	shell:
-		"vsearch --uchime_denovo {input} --nonchimeras {output}"
+		"vsearch --uchime_denovo {input} --nonchimeras {output} 2> {log}"
 
 
 
 rule assign_taxonomy : 
 	input:
-		reads = "all.merge.fasta",
-		greengene = "greengene.trim.fasta"
+		reads = "all.unchimera.fasta",
+		reference = config['reference']
 	output:
-		biom = "raw.biom",
 		otu  = "otu.txt"
 	shell:
-		"vsearch --usearch_global {input.reads} --db {input.greengene} --id 0.90 --sizein --threads 40 --biomout {output.biom} --otutabout {output.otu}"
-
-
-rule add_metadata:
-	input:
-		biom="raw.biom",
-		col="greengene.taxonomy.txt"
-	output:
-		"final.biom"
-	shell:
-		"biom add-metadata -i {input.biom} --observation-metadata-fp {input.col} -m mapping.txt -o {output} --sc-separated taxonomy"
-
-
-rule create_taxonomy_for_biom:
-	input:
-		"greengene.trim.fasta"
-	output:
-		"greengene.taxonomy.txt"
-	shell:
-		"echo -e '#OTU_ID\ttaxonomy'>{output};"
-		"cat {input}|grep '>'|sed 's/>//g'|cut -f1,4 >>{output}"
-
+		"vsearch --usearch_global {input.reads} --db {input.reference} --id 0.97 --sizein --threads 40 --otutabout {output.otu}"
 
 
 
@@ -64,8 +44,6 @@ rule merge :
 		"{sample}.merged.log"
 	shell: 
 		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output} 2> {log}"
-
-
 
 
 
