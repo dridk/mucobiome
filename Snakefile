@@ -3,7 +3,7 @@ import re
 
 rule merge_all :
 	input: 
-		[m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("raw/*.fastq.gz")) if m is not None]
+		set([m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("raw/*.fastq.gz")) if m is not None])
 
 	output:
 		"all.merge.fasta"
@@ -15,14 +15,18 @@ rule remove_chimer :
 		"all.merge.fasta"
 	output:
 		"all.unchimera.fasta"
+	log:
+		"all.unchimera.log"
+	threads:
+		60
 	shell:
-		"vsearch --uchime_denovo {input} --nonchimeras {output} --threads 45"
+		"vsearch --uchime_denovo {input} --nonchimeras {output} --threads {threads} 2> {log}"
 
 
 
 rule assign_taxonomy : 
 	input:
-		reads = "all.unchimera.fasta",
+		reads = "all.merge.fasta",
 		greengene = "greengene.trim.fasta"
 	output:
 		biom = "raw.biom",
@@ -30,8 +34,11 @@ rule assign_taxonomy :
 
 	log:
 		"assign_taxonomy.log"
+	threads:
+		60
+
 	shell:
-		"vsearch --usearch_global {input.reads} --db {input.greengene} --id {config[threshold]} --sizein --threads 45 --biomout {output.biom} --otutabout {output.otu} 2> {log}"
+		"vsearch --usearch_global {input.reads} --db {input.greengene} --id {config[threshold]} --sizein --threads {threads} --biomout {output.biom} --otutabout {output.otu} 2> {log}"
 
 
 rule add_metadata:
@@ -77,8 +84,28 @@ rule clean :
 		"{sample}.merged.fastq"
 	output:
 		"{sample}.clean.fastq"
+	
+	log:
+		"{sample}.clean.log"
+
+	message:
+		"Clean .. "
+
 	shell:
-		"sickle se -q 30 -l 500  -f {input} -t sanger -o {output}"
+		"sickle se -q 30 -l 500  -f {input} -t sanger -o {output} > {log}"
+
+
+
+rule merge_clean_report:
+	input:
+		merge = "{sample}.merged.log",
+		clean  = "{sample}.clean.log"
+	output:
+		"{sample}.merge_clean.report"
+	shell:
+		"cat {input.merge}|grep -E \"Pairs|Merged\"|sed 's/^\s*//g'|cut -f1 -d\" \"|awk 'BEGIN{{OFS=\"\t\"}}NR==1{{print \"raw\",$0}}NR==2{{print \"merged\",$0}}' > {output};"
+		"cat {input.clean}|grep \"kept\"|cut -d\":\" -f2|tr -d \" \"|awk 'BEGIN{{OFS=\"\t\"}}{{print \"clean\",$0}}' >> {output}"
+
 
 
 rule reverse:
