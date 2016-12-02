@@ -69,11 +69,10 @@ rule merge :
 		forward = "raw/{sample}_1.fastq.gz",	
 		reverse = "raw/{sample}_2.fastq.gz"
 	output:
-		"{sample}.merged.fastq"
-	log:
-		"{sample}.merged.log"
+		file="{sample}.merged.fastq",
+		log="{sample}.merged.log"
 	shell: 
-		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output} 2> {log}"
+		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output.file} 2> {output.log}"
 
 
 
@@ -83,28 +82,40 @@ rule clean :
 	input:
 		"{sample}.merged.fastq"
 	output:
-		"{sample}.clean.fastq"
-	
-	log:
-		"{sample}.clean.log"
+		file="{sample}.clean.fastq",
+		log="{sample}.clean.log"
 
 	message:
 		"Clean .. "
 
 	shell:
-		"sickle se -q 30 -l 500  -f {input} -t sanger -o {output} > {log}"
+		"sickle se -q {config[quality]} -l 500  -f {input} -t sanger -o {output.file} > {output.log}"
 
 
 
 rule merge_clean_report:
 	input:
-		merge = "{sample}.merged.log",
-		clean  = "{sample}.clean.log"
+		merge  ="{sample}.merged.log",
+		clean  ="{sample}.clean.log",
+		trim_f ="{sample}.cutadapt_forward.log",
+		trim_r ="{sample}.cutadapt_reverse.log"
 	output:
-		"{sample}.merge_clean.report"
+		final="{sample}.merge_clean.report",
+		mid=temp("{sample}.merge_clean.temp"),
+		mid2=temp("{sample}.merge_clean.temp2"),
+		
+
+	message:
+		"parse log for {wildcards.sample}"
 	shell:
-		"cat {input.merge}|grep -E \"Pairs|Merged\"|sed 's/^\s*//g'|cut -f1 -d\" \"|awk 'BEGIN{{OFS=\"\t\"}}NR==1{{print \"raw\",$0}}NR==2{{print \"merged\",$0}}' > {output};"
-		"cat {input.clean}|grep \"kept\"|cut -d\":\" -f2|tr -d \" \"|awk 'BEGIN{{OFS=\"\t\"}}{{print \"clean\",$0}}' >> {output}"
+		"cat {input.merge}|grep -A2 'Merging'|tail -n 2|grep -oE '[0-9]+ '|tr -d ' ' > {output.mid};" 
+		"cat {input.clean}|grep 'kept'|grep -Eo '[0-9]+' >> {output.mid};" 
+		"cat {input.trim_f}|grep 'Reads written'|grep -Eo '[0-9,]+ '|tr -d ',' >> {output.mid};"
+		"cat {input.trim_r}|grep 'Reads written'|grep -Eo '[0-9,]+ '|tr -d ',' >> {output.mid};"
+		"cat {output.mid}|awk -v OFS='\t' 'NR==1{{FINAL=$1; print $0, 100}} NR!=1{{print $1,$1*100/FINAL}}' > {output.mid2};"
+		"echo 'raw\nmerge\nclean\nforward\nreverse'|paste - {output.mid2} > {output.final}" 	
+
+	
 
 
 
@@ -122,14 +133,13 @@ rule trim_primers:
 	input:
 		"{sample}.fasta"
 	output:
-		"{sample}.trim.fasta"
-	log:
-		forward = "{sample}.cutadapt_forward",
-		reverse = "{sample}.cutadapt_reverse"
+		file    ="{sample}.trim.fasta",
+		forward ="{sample}.cutadapt_forward.log",
+		reverse ="{sample}.cutadapt_reverse.log"
 		
 	shell:
-		"cutadapt --discard-untrimmed -g {config[primer_forward]} {input} 2> {log.forward}|"
-		"cutadapt --discard-untrimmed -a $(echo {config[primer_reverse]}|rev|tr ATGCRM TACGYK) - 2> {log.reverse} > {output}"
+		"cutadapt --discard-untrimmed -g {config[primer_forward]} {input} 2> {output.forward}|"
+		"cutadapt --discard-untrimmed -a $(echo {config[primer_reverse]}|rev|tr ATGCRM TACGYK) - 2> {output.reverse} > {output.file}"
 
 
 

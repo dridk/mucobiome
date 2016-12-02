@@ -1,10 +1,17 @@
 
 {
 
+
+
+
 "primer_forward" : "CCTACGGGAGGCAGCAG",
 "primer_reverse" : "CCGTCAATTCMTTTRAGT",
 "greengene" : "database/gg_13_5_with_header.fasta",
 "sample_data" : "mapping.txt",
-"threshold": 0.97
+"threshold": 0.97,
+"quality": 30,
+"min_len": 400,
+"max_len": 600,
+"max_merge_diff" : 5
 
 }
