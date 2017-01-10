@@ -1,0 +1,31 @@
+
+---
+# the Raw folder should contains fastq.gz file in format : <NAME>_1.fastq.gz and <NAME>_2.fastq.gz
+raw_folder: raw
+
+# Forward primers used for 16S
+primer_forward: CCTACGGGAGGCAGCAG
+
+# Reverse primers used for 16S
+primer_reverse: CCGTCAATTCMTTTRAGT
+
+# Greengene database path 
+greengene: database/gg_13_5_with_header.fasta
+
+# Mapping files 
+sample_data: mapping.txt
+
+# Taxonomic assignement threashold
+threshold: 0.97
+
+# Quality filtering. Remove reads bellow 
+quality: 30
+
+# Keep only <min> reads 
+min_len: 400
+
+# Keep only <max> reads 
+max_len: 600
+
+max_merge_diff: 5
+

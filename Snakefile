@@ -1,9 +1,26 @@
 import glob 
 import re 
+from snakemake.remote.FTP import RemoteProvider as FTPRemoteProvider
+FTP = FTPRemoteProvider(username="myusername", password="mypassword")
+
+
+# rule downlad_greengene:
+#     input:
+#         FTP.remote("greengenes.microbio.me/greengenes_release/current/gg_13_5.fasta.gz",keep_local=True,username="anonymous", password="")
+#     output:
+#     	"greengene.fasta"
+#     shell:
+#     	"mv {input} {output}.gz; gzip -d {output}.gz"
+
+
+
+rule final:
+	input: "final.biom"
+
 
 rule merge_all :
 	input: 
-		set([m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("raw/*.fastq.gz")) if m is not None])
+		set([m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("{}/*.fastq.gz".format(config["raw_folder"]))) if m is not None])
 
 	output:
 		"all.merge.fasta"
