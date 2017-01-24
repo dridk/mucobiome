@@ -5,22 +5,22 @@ python:
   - "3.4"
   - "pypy"
 
-  before_install:
-    - sudo apt-get install r-base
-    - sudo apt-get install build-essential 
-    - git clone https://github.com/lh3/seqtk.git
-    - cd seqtk
-    - make; sudo make install 
-    - cd .. 
-    - git clone https://github.com/torognes/vsearch.git
-    - cd vsearch 
-    - ./autogen.sh 
-    - ./configure 
-    - make 
-    - sudo make install 
-    - cd ..
-    - cd database 
-    - sh download_greengene.sh 
+before_install:
+  - sudo apt-get install r-base
+  - sudo apt-get install build-essential 
+  - git clone https://github.com/lh3/seqtk.git
+  - cd seqtk
+  - make; sudo make install 
+  - cd .. 
+  - git clone https://github.com/torognes/vsearch.git
+  - cd vsearch 
+  - ./autogen.sh 
+  - ./configure 
+  - make 
+  - sudo make install 
+  - cd ..
+  - cd database 
+  - sh download_greengene.sh 
 
 
 
