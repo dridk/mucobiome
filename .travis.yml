@@ -18,6 +18,9 @@ python:
     - ./configure 
     - make 
     - sudo make install 
+    - cd ..
+    - cd database 
+    - sh download_greengene.sh 
 
 
 
