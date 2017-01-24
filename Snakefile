@@ -1,7 +1,5 @@
 import glob 
 import re 
-from snakemake.remote.FTP import RemoteProvider as FTPRemoteProvider
-FTP = FTPRemoteProvider(username="myusername", password="mypassword")
 
 
 # rule downlad_greengene:
@@ -13,11 +11,12 @@ FTP = FTPRemoteProvider(username="myusername", password="mypassword")
 #     	"mv {input} {output}.gz; gzip -d {output}.gz"
 
 
-
+# Generate Biom file . Final point of the pipeline
 rule final:
 	input: "final.biom"
 
 
+# Merge all fasta file after all preprocess has been done
 rule merge_all :
 	input: 
 		set([m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("{}/*.fastq.gz".format(config["raw_folder"]))) if m is not None])
@@ -27,6 +26,7 @@ rule merge_all :
 	shell:
 		"cat {input} > {output}"
 
+# Remove chimera
 rule remove_chimer : 
 	input:
 		"all.merge.fasta"
@@ -40,11 +40,11 @@ rule remove_chimer :
 		"vsearch --uchime_denovo {input} --nonchimeras {output} --threads {threads} 2> {log}"
 
 
-
+# Taxonomy assignement 
 rule assign_taxonomy : 
 	input:
-		reads = "all.merge.fasta",
-		greengene = "greengene.trim.fasta"
+		reads           = "all.merge.fasta",
+		target_database = "target_database.trim.fasta"
 	output:
 		biom = "raw.biom",
 		otu  = "otu.txt"
@@ -55,52 +55,59 @@ rule assign_taxonomy :
 		60
 
 	shell:
-		"vsearch --usearch_global {input.reads} --db {input.greengene} --id {config[threshold]} --sizein --threads {threads} --biomout {output.biom} --otutabout {output.otu} 2> {log}"
+		"vsearch --usearch_global {input.reads} --db {input.target_database} --id {config[threshold]} --sizein --threads {threads} --biomout {output.biom} --otutabout {output.otu} 2> {log}"
 
-
+# Add metadata : Column are replaced by taxon name and row by sample data 
 rule add_metadata:
 	input:
 		biom="raw.biom",
-		col="greengene.taxonomy.txt"
+		col ="target_taxonomy.txt",
+		row =config["sample_data"]
 	output:
 		"final.biom"
 	shell:
-		"biom add-metadata -i {input.biom} --observation-metadata-fp {input.col} -m mapping.txt -o {output} --sc-separated taxonomy"
+		"biom add-metadata -i {input.biom} --observation-metadata-fp {input.col} -m {input.row} -o {output} --sc-separated taxonomy"
 
-
+# Create 2 columns file with Taxon ID and Taxon Name as header
 rule create_taxonomy_for_biom:
 	input:
-		"greengene.trim.fasta"
+		config["database_taxonomy"]
 	output:
-		"greengene.taxonomy.txt"
+		"target_taxonomy.txt"
 	shell:
-		"echo -e '#OTU_ID\ttaxonomy'>{output};"
-		"cat {input}|grep '>'|sed 's/>//g'|cut -f1,4 >>{output}"
+		"zcat {input}|sed '1i#OTU_ID\ttaxonomy' > {output}"
 
 
-
-
-
-rule merge :
+# Merge pair end file with vsearch
+rule merge_with_vsearch :
 	input:
-		forward = "raw/{sample}_1.fastq.gz",	
-		reverse = "raw/{sample}_2.fastq.gz"
+		forward = config["raw_folder"]+"/{sample}_1.fastq.gz",	
+		reverse = config["raw_folder"]+"/{sample}_2.fastq.gz"
+
 	output:
-		file="{sample}.merged.fastq",
-		log="{sample}.merged.log"
+		file ="{sample}.merged_vsearch.fastq",
+		log  ="{sample}.merged_vsearch.log"
 	shell: 
 		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output.file} 2> {output.log}"
 
+# Merge pair end file with flash
+rule merge_with_flash :
+	input:
+		forward = config["raw_folder"]+"/{sample}_1.fastq.gz",	
+		reverse = config["raw_folder"]+"/{sample}_2.fastq.gz"
 
-
-
+	output:
+		file ="{sample}.merged_flash.fastq",
+		log  ="{sample}.merged_flash.log"
+	shell: 
+		"flash {input.forward} {input.reverse} -o {wildcards.sample}  2>&1 | tee {output.log}; mv {wildcards.sample}.extendedFrags.fastq {output.file}"
 
 rule clean : 
 	input:
-		"{sample}.merged.fastq"
+		"{sample}.merged_"+config["merge_tool"] +".fastq"
 	output:
-		file="{sample}.clean.fastq",
-		log="{sample}.clean.log"
+		file ="{sample}.clean.fastq",
+		log  ="{sample}.clean.log"
 
 	message:
 		"Clean .. "
@@ -132,9 +139,6 @@ rule merge_clean_report:
 		"cat {output.mid}|awk -v OFS='\t' 'NR==1{{FINAL=$1; print $0, 100}} NR!=1{{print $1,$1*100/FINAL}}' > {output.mid2};"
 		"echo 'raw\nmerge\nclean\nforward\nreverse'|paste - {output.mid2} > {output.final}" 	
 
-	
-
-
 
 rule reverse:
 	input:
@@ -144,7 +148,15 @@ rule reverse:
 	shell:
 		"seqtk seq -A -r {input} > {output}"
 
-
+rule uncompress_database:
+	input:
+		config["database_fasta"]
+	output:
+		"target_database.fasta"
+	shell:
+		"gzip -d < {input} > {output}"
+	message:
+		"Uncompress target database"
 
 rule trim_primers:
 	input:

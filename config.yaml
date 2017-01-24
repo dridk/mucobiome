@@ -9,17 +9,19 @@ primer_forward: CCTACGGGAGGCAGCAG
 # Reverse primers used for 16S
 primer_reverse: CCGTCAATTCMTTTRAGT
 
-# Greengene database path 
-greengene: database/gg_13_5_with_header.fasta
+# target 16s database database path. ( Greengene by default) 
+database_fasta: ../database/gg_13_5.fasta.gz 
+database_taxonomy: ../database/gg_13_5_taxonomy.txt.gz
+        
 
 # Mapping files 
-sample_data: mapping.txt
+sample_data: ../sample_data.tsv
 
 # Taxonomic assignement threashold
 threshold: 0.97
 
 # Quality filtering. Remove reads bellow 
-quality: 30
+quality: 10
 
 # Keep only <min> reads 
 min_len: 400
@@ -29,3 +31,5 @@ max_len: 600
 
 max_merge_diff: 5
 
+# Merge tools <vsearch> or <flash>
+merge_tool: vsearch 
