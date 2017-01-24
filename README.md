@@ -79,11 +79,52 @@ snakemake -d working_directory -np --configfile config.yaml
 </table>
 
 ### Input file 
-input data are paired fastq.gz file. You must put all your data into the data/raw folder. Both paired files must respect the following syntax.
+input data are paired fastq.gz files. You must put all your datas into the data/raw folder. Both paired files must respect the following syntax.
 *{Sample}* is your samplename.
 
      {SAMPLE}_1.fastq.gz 
      {SAMPLE}_2.fastq.gz
+
+### config.yaml 
+This file contains all parameters required to perform an analysis. 
+
+<table>
+<tr><th>Options</th><th>Description</th></tr>
+<tr><th>raw_folder</th><td>the directory which contains fastq input files</td></tr>
+<tr><th>primer_forward</th><td>The forward primer. By defaut primers select the V3-V5 region</td></tr>
+<tr><th>reverse_primer</th><td>The reverse primer. By defaut primers select the V3-V5 region</td></tr>
+<tr><th>database_fasta</th><td>This is a fasta file which contains complete 16S sequence. By default it use greengene</td></tr>
+<tr><th>database_taxonomy</th><td>This is a two columns file. Fasta header ID from database_fasta and the taxonomy</td></tr>
+<tr><th>sample_data</th><td>Sample meta data</td></tr>
+<tr><th>threshold</th><td>Taxonomy assignement threshold. By default 97%</td></tr>
+<tr><th>quality</th><td>Remove all reads bellow this threshold. You should set this value to 20</td></tr>
+<tr><th>min_len</th><td>Minimum reads length accepted</td></tr>
+<tr><th>max_len</th><td>Maximum reads length accepted</td></tr>
+<tr><th>merge_tool</th><td>Use Flash or vsearch to perform merging. By default it use vsearch</td></tr>
+</table>
+
+### sample_data.tsv
+This files contains metadata for each sample. Fill it with your own data. 
+
+
+### Run your experiment 
+When all requirements are done, you can run one of the following commands
+
+       # Run your pipeline using 60 threads
+       snakemake -d working_directory -p --configfile config.yaml --cores 60
+       
+       # Force the pipeline to rebuild the last step
+       snakemake -d working_directory -fp --configfile config.yaml --cores 60
+       
+       # Force the pipeline to rebuild everything
+       snakemake -d working_directory -Fp --configfile config.yaml --cores 60
+
+
+     
+
+
+
+
 
 
 
