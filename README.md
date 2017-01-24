@@ -4,7 +4,7 @@ Neither QIIME nor MOTHUR are required. Few dependency like vsearch are necessary
 Mucobiome use [snakemake](https://bitbucket.org/johanneskoester/snakemake/wiki/Home) as the backbone. This tools make it possible to run
 the pipeline optimally using multithreading. 
 
-## How it works ? **Fastq** -> **biom**   
+## How it works ? **Fastq paired files** -> **biom**   
   
 the pipeline takes several pair-end fastq as input ( one per sample) and generate one biom file which contains OTU table with taxonomy and sample 
 meta data. 
