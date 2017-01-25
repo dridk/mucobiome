@@ -85,10 +85,14 @@ rule merge_with_vsearch :
 		reverse = config["raw_folder"]+"/{sample}_2.fastq.gz"
 
 	output:
-		file ="{sample}.merged_vsearch.fastq",
-		log  ="{sample}.merged_vsearch.log"
+		file ="{sample}.merged_vsearch.fastq",  #Vsearch log
+		log1 ="{sample}.merged_vsearch.log",    # Standard log 
+		log2 ="{sample}.merged.log" 
 	shell: 
-		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output.file} 2> {output.log}"
+		"vsearch --fastq_mergepairs {input.forward} --reverse {input.reverse} --fastqout {output.file} 2> {output.log1};"
+		"cat {output.log1}|grep -A2 'Merging'|tail -n 2|grep -oE '[0-9]+ '|tr -d ' ' > {output.log2};"
+
+
 
 # Merge pair end file with flash
 rule merge_with_flash :
@@ -97,10 +101,13 @@ rule merge_with_flash :
 		reverse = config["raw_folder"]+"/{sample}_2.fastq.gz"
 
 	output:
-		file ="{sample}.merged_flash.fastq",
-		log  ="{sample}.merged_flash.log"
+		file  ="{sample}.merged_flash.fastq",
+		log1  ="{sample}.merged_flash.log",
+		log2  ="{sample}.merged.log"
+
 	shell: 
-		"flash {input.forward} {input.reverse} -o {wildcards.sample}  2>&1 | tee {output.log}; mv {wildcards.sample}.extendedFrags.fastq {output.file}"
+		"flash {input.forward} {input.reverse} -o {wildcards.sample}  >{output.log1}; mv {wildcards.sample}.extendedFrags.fastq {output.file};"
+		"cat {output.log1}|grep -A2 \"Read combination\"|grep -oE '[0-9]*' > {output.log2}"
 
 rule clean : 
 	input:
@@ -119,12 +126,12 @@ rule clean :
 
 rule merge_clean_report:
 	input:
-		merge  ="{sample}.merged.log",
+		merge  ="{sample}.merged_"+config["merge_tool"]+".log",
 		clean  ="{sample}.clean.log",
 		trim_f ="{sample}.cutadapt_forward.log",
 		trim_r ="{sample}.cutadapt_reverse.log"
 	output:
-		final="{sample}.merge_clean.report",
+		final="{sample}.resume.log",
 		mid=temp("{sample}.merge_clean.temp"),
 		mid2=temp("{sample}.merge_clean.temp2"),
 		
@@ -132,7 +139,7 @@ rule merge_clean_report:
 	message:
 		"parse log for {wildcards.sample}"
 	shell:
-		"cat {input.merge}|grep -A2 'Merging'|tail -n 2|grep -oE '[0-9]+ '|tr -d ' ' > {output.mid};" 
+		"cat {wildcards.sample}.merged.log > {output.mid};" 
 		"cat {input.clean}|grep 'kept'|grep -Eo '[0-9]+' >> {output.mid};" 
 		"cat {input.trim_f}|grep 'Reads written'|grep -Eo '[0-9,]+ '|tr -d ',' >> {output.mid};"
 		"cat {input.trim_r}|grep 'Reads written'|grep -Eo '[0-9,]+ '|tr -d ',' >> {output.mid};"
