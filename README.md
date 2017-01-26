@@ -1,4 +1,5 @@
-# Mucobiome
+# Mucobiome ![GitHub Logo](https://img.shields.io/badge/snakemake-≥3.5.2-brightgreen.svg?style=flat-square)
+
 Mucobiome is a simple pipeline which aims to analyse 16S RNA genomics data from high throughput sequencer.
 Neither QIIME nor MOTHUR are required. Few dependency like vsearch are necessary and are listed bellow.
 Mucobiome use [snakemake](https://bitbucket.org/johanneskoester/snakemake/wiki/Home) as the backbone. This tools make it possible to run
