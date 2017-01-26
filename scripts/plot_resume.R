@@ -20,7 +20,7 @@ myList <- lapply(
 mytable = do.call(data.frame, myList)
 names(mytable) = names
 
-subtable = mytable[c(1,3) ,]
+subtable = mytable[1 ,]
 
 png("all.resume.png", width=1024, height=800)
 barplot(as.matrix(subtable) / colSums(subtable))

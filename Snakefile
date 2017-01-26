@@ -189,8 +189,9 @@ rule dereplicate :
 
 rule rename:
 	input:
-		"{sample}.dereplicate.fasta"
+		"{sample}.dereplicate.fasta",
+		"{sample}.resume.log"
 	output:
 		"{sample}.rename.fasta"
 	shell:
-		"cat {input}|sed -e 's/>.*/&sample={wildcards.sample};/g' > {output}"
+		"cat {input[0]}|sed -e 's/>.*/&sample={wildcards.sample};/g' > {output}"
