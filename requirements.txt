@@ -2,3 +2,4 @@ cutadapt>=1.12
 illumina-utils>=1.4.8
 snakemake>=3.10.0
 biom-format>=2.1.5
+argparse 

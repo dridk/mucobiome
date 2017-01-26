@@ -80,7 +80,7 @@ snakemake -d working_directory -np --configfile config.yaml
 
 ### Input file 
 input data are paired fastq.gz files. You must put all your datas into the data/raw folder. Both paired files must respect the following syntax.
-*{Sample}* is your samplename.
+*{Sample}* is your samplename. Do not use "." character in sample name. use alpha numeric only .
 
      {SAMPLE}_1.fastq.gz 
      {SAMPLE}_2.fastq.gz

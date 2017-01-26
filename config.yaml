@@ -12,7 +12,9 @@ primer_reverse: CCGTCAATTCMTTTRAGT
 # target 16s database database path. ( Greengene by default) 
 database_fasta: ../database/gg_13_5.fasta.gz 
 database_taxonomy: ../database/gg_13_5_taxonomy.txt.gz
-        
+
+# Scripts folder paths 
+scripts_path: ../scripts        
 
 # Mapping files 
 sample_data: ../sample_data.tsv
@@ -28,6 +30,9 @@ min_len: 400
 
 # Keep only <max> reads 
 max_len: 600
+
+# minimum  size for global dereplication 
+minuniquesize : 10
 
 max_merge_diff: 5
 

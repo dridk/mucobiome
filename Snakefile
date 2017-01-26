@@ -19,7 +19,7 @@ rule final:
 # Merge all fasta file after all preprocess has been done
 rule merge_all :
 	input: 
-		set([m.group(0)+".rename.fasta" for m in (re.search("\d+",l) for l in glob.glob("{}/*.fastq.gz".format(config["raw_folder"]))) if m is not None])
+		set([m.group(0)+".dereplicate.fasta" for m in (re.search("\d+",l) for l in glob.glob("{}/*.fastq.gz".format(config["raw_folder"]))) if m is not None])
 
 	output:
 		"all.merge.fasta"
@@ -43,11 +43,11 @@ rule remove_chimer :
 # Taxonomy assignement 
 rule assign_taxonomy : 
 	input:
-		reads           = "all.merge.fasta",
+		reads           = "all.dereplicate.fasta",
 		target_database = "target_database.trim.fasta"
 	output:
-		biom = "raw.biom",
-		otu  = "otu.txt"
+		sam    = "all.assignement.sam",
+		ass    = "all.assignement.txt"
 
 	log:
 		"assign_taxonomy.log"
@@ -55,7 +55,22 @@ rule assign_taxonomy :
 		60
 
 	shell:
-		"vsearch --usearch_global {input.reads} --db {input.target_database} --id {config[threshold]} --sizein --threads {threads} --biomout {output.biom} --otutabout {output.otu} 2> {log}"
+		"vsearch --usearch_global {input.reads} --db {input.target_database} --id {config[threshold]} --sizein --threads {threads} --samout {output.sam} 2> {log};"
+		"cat {output.sam}|cut -f1,3|sed 's/;size=[0-9]*;//g' > {output.ass}"
+
+# Create biom with my own scripts 
+rule create_biom:
+	input: 
+		"all.assignement.txt"
+	output:
+		"raw.biom"
+	params:
+		cmd  = os.path.join(config["scripts_path"],"make_biom.py"),
+		path = os.getcwd()
+	shell:
+		"python {params.cmd} {params.path} -o {output}"
+		
+
 
 # Add metadata : Column are replaced by taxon name and row by sample data 
 rule add_metadata:
@@ -183,9 +198,19 @@ rule dereplicate :
 	input:
 		"{sample}.trim.fasta"
 	output:
-		"{sample}.dereplicate.fasta"
+		out = "{sample}.dereplicate.fasta",
+		log = "{sample}.dereplicate.log"
 	shell:
-		"vsearch --derep_fulllength {input} --output {output} --sizeout --relabel_keep"
+		"vsearch --derep_fulllength {input} --output {output.out} --sizeout --relabel_sha1 2> {output.log} "
+
+rule dereplicate_all : 
+	input:
+		"all.merge.fasta"
+	output:
+		out = "all.dereplicate.fasta",
+		log = "all.dereplicate.log"
+	shell:
+		"vsearch --derep_fulllength {input} --output {output.out} --sizein --sizeout 2> {output.log} --minuniquesize {config[minuniquesize]}"
 
 rule rename:
 	input:
@@ -195,3 +220,5 @@ rule rename:
 		"{sample}.rename.fasta"
 	shell:
 		"cat {input[0]}|sed -e 's/>.*/&sample={wildcards.sample};/g' > {output}"
+
+# 0135929a801f7304340d0c8a6ffa031d151163a4
