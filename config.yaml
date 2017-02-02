@@ -17,7 +17,7 @@ database_taxonomy: ../database/gg_13_5_taxonomy.txt.gz
 scripts_path: ../scripts        
 
 # Mapping files 
-sample_data: ../test.tsv
+sample_data: ../sample_data.tsv
 
 # Taxonomic assignement threashold
 threshold: 0.97
