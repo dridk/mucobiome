@@ -17,7 +17,7 @@ database_taxonomy: ../database/gg_13_5_taxonomy.txt.gz
 scripts_path: ../scripts        
 
 # Mapping files 
-sample_data: ../sample_data.tsv
+sample_data: ../test.tsv
 
 # Taxonomic assignement threashold
 threshold: 0.97
@@ -37,4 +37,4 @@ minuniquesize : 10
 max_merge_diff: 5
 
 # Merge tools <vsearch> or <flash>
-merge_tool: vsearch 
+merge_tool: flash 

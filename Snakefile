@@ -13,7 +13,7 @@ import re
 
 # Generate Biom file . Final point of the pipeline
 rule final:
-	input: "final.biom"
+	input: "final.phinch.biom"
 
 
 # Merge all fasta file after all preprocess has been done
@@ -25,6 +25,17 @@ rule merge_all :
 		"all.merge.fasta"
 	shell:
 		"cat {input} > {output}"
+
+rule make_resume :
+	input: 
+		set([m.group(0)+".resume.log" for m in (re.search("\d+",l) for l in glob.glob("{}/*.fastq.gz".format(config["raw_folder"]))) if m is not None])
+
+	output:
+		"all.resume.log"
+	shell:
+		"touch {output}"
+
+
 
 # Remove chimera
 rule remove_chimer : 
@@ -82,6 +93,14 @@ rule add_metadata:
 		"final.biom"
 	shell:
 		"biom add-metadata -i {input.biom} --observation-metadata-fp {input.col} -m {input.row} -o {output} --sc-separated taxonomy"
+
+rule create_biom_phinch:
+	input:
+		"final.biom"
+	output:
+		"final.phinch.biom"
+	shell:
+		"biom convert -i {input} -o {output} --to-json"
 
 # Create 2 columns file with Taxon ID and Taxon Name as header
 rule create_taxonomy_for_biom:
@@ -212,13 +231,13 @@ rule dereplicate_all :
 	shell:
 		"vsearch --derep_fulllength {input} --output {output.out} --sizein --sizeout 2> {output.log} --minuniquesize {config[minuniquesize]}"
 
-rule rename:
-	input:
-		"{sample}.dereplicate.fasta",
-		"{sample}.resume.log"
-	output:
-		"{sample}.rename.fasta"
-	shell:
-		"cat {input[0]}|sed -e 's/>.*/&sample={wildcards.sample};/g' > {output}"
+# rule rename:
+# 	input:
+# 		"{sample}.dereplicate.fasta",
+# 		"{sample}.resume.log"
+# 	output:
+# 		"{sample}.rename.fasta"
+# 	shell:
+# 		"cat {input[0]}|sed -e 's/>.*/&sample={wildcards.sample};/g' > {output}"
 
 # 0135929a801f7304340d0c8a6ffa031d151163a4
