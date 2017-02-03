@@ -45,14 +45,14 @@ samples:
     567972 : 30   # Streptococcus agalactia 
 - name: P5
   proba: 0
-  factor : 2 
+  factor: 2
   species:
-    "941234" : 50   #Pseudomonas
-    "932917" : 100   # Staph 
-    "1055786": 50   # Rothia
-    "904894" : 300   #Neisseria 
-    "904997" : 250   #Streptococcus anginosus ,
-    "567972" : 250   # Streptococcus agalactia 
+    941234 : 5   #Pseudomonas
+    932917 : 10   # Staph 
+    1055786: 5   # Rothia
+    904894 : 30   #Neisseria 
+    904997 : 25   #Streptococcus anginosus ,
+    567972 : 25   # Streptococcus agalactia 
 - name: P6
   proba: 0.001 
   factor : 1
