@@ -1,0 +1,86 @@
+---
+total : 10000
+source: "../database/target_database.trim.fasta"
+
+samples:
+- name: P1 
+  proba: 0
+  factor : 1
+  species:
+    941234 : 80   #Pseudomonas
+    932917 : 10   # Staph 
+    1055786: 4   # Rothia
+    904894 : 4   #Neisseria 
+    904997 : 1   #Streptococcus anginosus ,
+    567972 : 1   # Streptococcus agalactia 
+- name: P2
+  proba: 0 
+  factor : 1
+  species:
+    941234 : 90   #Pseudomonas
+    932917 : 5   # Staph 
+    1055786: 2   # Rothia
+    904894 : 1   #Neisseria 
+    904997 : 1   #Streptococcus anginosus ,
+    567972 : 1   # Streptococcus agalactia 
+- name: P3 
+  proba: 0
+  factor : 1
+  species:
+    941234 : 85   #Pseudomonas
+    932917 : 10   # Staph 
+    1055786: 2   # Rothia
+    904894 : 1   #Neisseria 
+    904997 : 1   #Streptococcus anginosus ,
+    567972 : 1   # Streptococcus agalactia 
+- name: P4 
+  proba: 0
+  factor : 1
+  species:
+    941234 : 3   #Pseudomonas
+    932917 : 2   # Staph 
+    1055786: 5   # Rothia
+    904894 : 30   #Neisseria 
+    904997 : 30   #Streptococcus anginosus ,
+    567972 : 30   # Streptococcus agalactia 
+- name: P5
+  proba: 0
+  factor : 2 
+  species:
+    "941234" : 50   #Pseudomonas
+    "932917" : 100   # Staph 
+    "1055786": 50   # Rothia
+    "904894" : 300   #Neisseria 
+    "904997" : 250   #Streptococcus anginosus ,
+    "567972" : 250   # Streptococcus agalactia 
+- name: P6
+  proba: 0.001 
+  factor : 1
+  species:
+    "941234" : 20   #Pseudomonas
+    "932917" : 20   # Staph 
+    "1055786": 20   # Rothia
+    "904894" : 20   #Neisseria 
+    "904997" : 20   #Streptococcus anginosus ,
+    "567972" : 20   # Streptococcus agalactia 
+- name: P7
+  proba: 0.01
+  factor : 1 
+  species:
+    "941234" : 20   #Pseudomonas
+    "932917" : 20   # Staph 
+    "1055786": 20   # Rothia
+    "904894" : 20   #Neisseria 
+    "904997" : 20   #Streptococcus anginosus ,
+    "567972" : 20   # Streptococcus agalactia 
+- name: P8
+  proba: 0.1
+  factor : 1
+  species:
+    "941234" : 20   #Pseudomonas
+    "932917" : 20   # Staph 
+    "1055786": 20   # Rothia
+    "904894" : 20   #Neisseria 
+    "904997" : 20   #Streptococcus anginosus ,
+    "567972" : 20   # Streptococcus agalactia 
+ 

@@ -3,6 +3,11 @@
 # the Raw folder should contains fastq.gz file in format : <NAME>_1.fastq.gz and <NAME>_2.fastq.gz
 raw_folder: raw
 
+
+samples :
+  - "1001"
+  - "1003"
+
 # Forward primers used for 16S
 primer_forward: CCTACGGGAGGCAGCAG
 

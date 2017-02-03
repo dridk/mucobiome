@@ -1,7 +1,7 @@
 import glob 
 import re 
 
-
+print(config["samples"])
 # rule downlad_greengene:
 #     input:
 #         FTP.remote("greengenes.microbio.me/greengenes_release/current/gg_13_5.fasta.gz",keep_local=True,username="anonymous", password="")
@@ -19,8 +19,7 @@ rule final:
 # Merge all fasta file after all preprocess has been done
 rule merge_all :
 	input: 
-		set([m.group(0)+".dereplicate.fasta" for m in (re.search("\d+",l) for l in glob.glob("{}/*.fastq.gz".format(config["raw_folder"]))) if m is not None])
-
+		[sample +".dereplicate.fasta" for sample in config["samples"]]
 	output:
 		"all.merge.fasta"
 	shell:
@@ -210,7 +209,6 @@ rule trim_primers:
 	shell:
 		"cutadapt --discard-untrimmed -g {config[primer_forward]} {input} 2> {output.forward}|"
 		"cutadapt --discard-untrimmed -a $(echo {config[primer_reverse]}|rev|tr ATGCRM TACGYK) - 2> {output.reverse} > {output.file}"
-
 
 
 rule dereplicate : 
