@@ -1,19 +1,60 @@
 import glob 
 import re 
+from snakemake.utils import report
 
-print(config["samples"])
-# rule downlad_greengene:
-#     input:
-#         FTP.remote("greengenes.microbio.me/greengenes_release/current/gg_13_5.fasta.gz",keep_local=True,username="anonymous", password="")
-#     output:
-#     	"greengene.fasta"
-#     shell:
-#     	"mv {input} {output}.gz; gzip -d {output}.gz"
-
-
+configfile: "/home/sschutz/working_directory/mucobiome/real_config.yaml"
+	
+		
 # Generate Biom file . Final point of the pipeline
 rule final:
 	input: "final.phinch.biom"
+
+
+# ===============  REPORT SESSION =============================================
+rule merge_resume_log :
+	input: 
+		[sample +".resume.log" for sample in config["samples"]]
+	output:
+		"all.resume.log"
+	run:
+		with open(output[0],"w") as file:
+			#Write header 
+			file.write("Sample\tRaw\tMerge\tClean\tForward\tReverse\n")
+			for i in input:
+				with open(i,"r") as log:
+					values = []
+					values.append(i.replace(".resume.log",""))
+					for line in log:
+						values.append(line.split("\t")[1])
+					file.write("\t".join(values))
+					file.write("\n")
+
+rule plot_resume_log:
+	input:
+		"all.resume.log"
+	output:
+		"all.resume.png"
+	shell:
+		"Rscript --vanilla {config[scripts_path]}/plot_all_resume.r {input} {output}"
+
+
+rule create_report:
+	input:
+		img  = "all.resume.png",
+		data = "all.resume.log"
+	output:
+		"all.resume.html"
+	run:
+		report(""" 
+			Resume report 
+			=============
+
+			.. image:: all.resume.png
+
+
+			""", output[0], **input)
+
+
 
 
 # Merge all fasta file after all preprocess has been done
@@ -24,16 +65,6 @@ rule merge_all :
 		"all.merge.fasta"
 	shell:
 		"cat {input} > {output}"
-
-rule make_resume :
-	input: 
-		set([m.group(0)+".resume.log" for m in (re.search("\d+",l) for l in glob.glob("{}/*.fastq.gz".format(config["raw_folder"]))) if m is not None])
-
-	output:
-		"all.resume.log"
-	shell:
-		"touch {output}"
-
 
 
 # Remove chimera
