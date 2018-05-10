@@ -1,8 +1,4 @@
-import glob 
-import re 
-from snakemake.utils import report
 
-configfile: "/home/sschutz/working_directory/mucobiome/real_config.yaml"
 	
 		
 # Generate Biom file . Final point of the pipeline
@@ -260,13 +256,3 @@ rule dereplicate_all :
 	shell:
 		"vsearch --derep_fulllength {input} --output {output.out} --sizein --sizeout 2> {output.log} --minuniquesize {config[minuniquesize]}"
 
-# rule rename:
-# 	input:
-# 		"{sample}.dereplicate.fasta",
-# 		"{sample}.resume.log"
-# 	output:
-# 		"{sample}.rename.fasta"
-# 	shell:
-# 		"cat {input[0]}|sed -e 's/>.*/&sample={wildcards.sample};/g' > {output}"
-
-# 0135929a801f7304340d0c8a6ffa031d151163a4
