@@ -1,5 +1,5 @@
 
-	
+configfile: "config.yaml"
 		
 # Generate Biom file . Final point of the pipeline
 rule final:
