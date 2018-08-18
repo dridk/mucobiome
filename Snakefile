@@ -211,7 +211,7 @@ rule fastq2fasta:
 	input:
 		"{sample}.clean.fastq"
 	output:
-		"{sample}.clean.fasta"
+		"{sample}.fasta"
 	shell:
 		"seqtk seq -A -r {input} > {output}"
 

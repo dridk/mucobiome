@@ -5,7 +5,8 @@ import yaml
 import re
 from Bio import SeqIO
 import sys
-
+import pickle
+  
 PATH      = sys.argv[1]
 BIOM_FILE = sys.argv[2]
 
@@ -57,6 +58,9 @@ for sample in config["samples"]:
 df = df.replace(np.nan, 0)
 
 df = df.transpose()
+
+
+pickle.dump(df, open("test_panda.pickle", "wb" ) )
 
 # Create a biom data Table and write as a file 
 table = biom.table.Table(df.values, observation_ids=df.index, sample_ids=df.columns)
