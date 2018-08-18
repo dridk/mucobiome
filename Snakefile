@@ -100,25 +100,25 @@ rule create_biom:
 	input: 
 		"all.assignement.txt"
 	output:
-		"raw.biom"
+		"raw2.biom"
 	params:
-		cmd  = os.path.join(config["scripts_path"],"make_biom.py"),
+		cmd  = os.path.join(config["scripts_path"],"make_biom2.py"),
 		path = os.getcwd()
 	shell:
-		"python {params.cmd} {params.path} -o {output}"
+		"python {params.cmd} {params.path} {output}"
 		
 
 
 # Add metadata : Column are replaced by taxon name and row by sample data 
 rule add_metadata:
 	input:
-		biom="raw.biom",
+		biom="raw2.biom",
 		col ="target_taxonomy.txt",
 		row =config["sample_data"]
 	output:
 		"final.biom"
 	shell:
-		"biom add-metadata -i {input.biom} --observation-metadata-fp {input.col} -m {input.row} -o {output} --sc-separated taxonomy"
+		"biom add-metadata -i {input.biom} --observation-metadata-fp {input.col} -o {output} --sc-separated taxonomy"
 
 rule create_biom_phinch:
 	input:
@@ -206,12 +206,12 @@ rule merge_clean_report:
 		"cat {output.mid}|awk -v OFS='\t' 'NR==1{{FINAL=$1; print $0, 100}} NR!=1{{print $1,$1*100/FINAL}}' > {output.mid2};"
 		"echo 'raw\nmerge\nclean\nforward\nreverse'|paste - {output.mid2} > {output.final}" 	
 
-
-rule reverse:
+# this rule convert fastq to fasta AND Reverse the strand ! 
+rule fastq2fasta:
 	input:
-		"{sample}.clean.fastq"
+		"{filename}.fastq"
 	output:
-		"{sample}.fasta"
+		"{filename}.fasta"
 	shell:
 		"seqtk seq -A -r {input} > {output}"
 
