@@ -209,9 +209,9 @@ rule merge_clean_report:
 # this rule convert fastq to fasta AND Reverse the strand ! 
 rule fastq2fasta:
 	input:
-		"{filename}.fastq"
+		"{sample}.clean.fastq"
 	output:
-		"{filename}.fasta"
+		"{sample}.clean.fasta"
 	shell:
 		"seqtk seq -A -r {input} > {output}"
 
