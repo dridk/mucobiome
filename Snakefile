@@ -213,7 +213,7 @@ rule fastq2fasta:
 	output:
 		"{sample}.fasta"
 	shell:
-		"seqtk seq -A -r {input} > {output}"
+		"seqtk seq -A {input} > {output}"
 
 rule uncompress_database:
 	input:
@@ -222,8 +222,7 @@ rule uncompress_database:
 		"target_database.fasta"
 	shell:
 		"gzip -d < {input} > {output}"
-	message:
-		"Uncompress target database"
+
 
 rule trim_primers:
 	input:
@@ -254,5 +253,5 @@ rule dereplicate_all :
 		out = "all.dereplicate.fasta",
 		log = "all.dereplicate.log"
 	shell:
-		"vsearch --derep_fulllength {input} --output {output.out} --sizein --sizeout 2> {output.log} --minuniquesize {config[minuniquesize]}"
+		"vsearch --derep_fulllength {input} --output {output.out} --sizein --sizeout 2> {output.log}"
 

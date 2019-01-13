@@ -49,7 +49,7 @@ for sample in config["samples"]:
             taxaid = assignement[uuid]
             sample_dict[taxaid] = [size]
         except:
-            sample_dict[taxaid] = [np.NaN]
+            pass
         
         
     df = df.append(pd.DataFrame(sample_dict, index=[str(sample)]))
